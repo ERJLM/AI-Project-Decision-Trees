@@ -1,229 +1,325 @@
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 public class Tree {
     Node root;
-
-    Tree(Map<String, Map<String,String>> examples, String targetAttribute, Set<String> attributes){
-        root = ID3(examples, targetAttribute, attributes);
+    Map<String, Map<String,String>> data;
+    Queue<String> attrib;
+    String target;
+    Tree(Map<String, Map<String,String>> examples, String targetAttribute, Queue<String> attributes){
+        data = examples;
+        attrib = attributes;
+        target = targetAttribute;
+     
+        root = ID3(examples, attributes, targetAttribute);
+        root.setExamples(examples);
     }
+
 
     Node getRoot(){
         return root;
     }
 
-    Node ID3(Map<String, Map<String,String>> examples, String targetAttribute, Set<String> attributes) {
-        Node root = new Node();
-        if(attributes.isEmpty()) return root;
-        //System.out.println(examples);
-        Set<String> l = examples.keySet();
-        String x = l.iterator().next();
-         //System.out.println(attributes);
-        //System.out.println(calculateEntropy(examples, "Pat", targetAttribute) + " Hunny");
-        String example = examples.get(x).get(targetAttribute);
-        //System.out.println(calculateEntropy(examples, "Pat", targetAttribute) + " ENTRO");
-        // Check if all types in the target attribute are the same
-        if (isPositive(examples, targetAttribute)) {
-            root.label = examples.get(x).get(targetAttribute);
-            return root;
+  
+
+    
+    private Node ID3(Map<String, Map<String, String>> examples, Queue<String> attributes, String targetAttribute) {
+        // check if all examples have the same classification
+        if (isSame(examples, targetAttribute)) {
+            return new Node(new ArrayList<>(), getMostCommonValue(examples, targetAttribute));
         }
-        // Check if the list of attributes is empty
-       
-        if(attributes.isEmpty() || attributes.contains(null)){
-            root.label = getMostCommonValue(examples,targetAttribute, targetAttribute, targetAttribute);
-            return root;
+        // check if the list of attributes is empty
+        else if (attributes.isEmpty()) {
+            return new Node(new ArrayList<>(), getMajorityClassification(examples, targetAttribute));
         }
-        else{
-        // Find the attribute that best classifies examples
-        Node bestAttribute = findBestAttribute(examples, attributes, targetAttribute);
-        root = bestAttribute;
-        //System.out.println(bestAttribute.getLabel() + "HHH");
-        List<String> attributeValues = getAttributeValues(examples, bestAttribute.label);
-       
-        
-        for (String value : attributeValues) {
-            
-            Map<String, Map<String, String>> subset = getSubset(examples, bestAttribute.label, value);
-           // if(bestAttribute.label.equals("Hun") && value.equals("Yes")) System.out.println(subset);
-            //If all the values are equal
-            System.out.println(subset);
-            if(isSame(examples, bestAttribute.label, value, targetAttribute)){
-                Node leafNode = new Node(getMostCommonValue(examples, bestAttribute.label, value, targetAttribute));
-                //leafNode.label = value;
-                root.children.add(leafNode);
-            } else {
-                Set<String> remainingAttributes = new HashSet<>(attributes);
-                remainingAttributes.remove(bestAttribute.label);
-                Node subtree = ID3(subset, targetAttribute, remainingAttributes);
-                subtree.label = findBestAttribute(subset, remainingAttributes, targetAttribute).getLabel();
-                root.children.add(subtree);
+        // else split by best attribute and handle subsets (including empty)
+        else {
+            Node bestAttribute = findBestAttribute(examples, attributes, targetAttribute);
+            List<String> attributeValues = getAttributeValues(examples, bestAttribute.getLabel());
+            List<Node> children = new ArrayList<>();
+           
+           
+            for (String value : attributeValues) {
+                Node child = new Node();
+                Map<String, Map<String, String>> subset = getSubset(examples, bestAttribute.getLabel(), value);
+                if (subset.isEmpty()) {
+                    child = new Node(new ArrayList<>(), getMostCommonValue(examples, targetAttribute));
+                } else {
+                    Queue<String> remainingAttributes = new ArrayDeque<>(attributes);
+                    remainingAttributes.remove(bestAttribute.getLabel());
+                    child.setExamples(subset);
+                    
+                    child = ID3(subset, remainingAttributes, targetAttribute);
+                    System.out.println(child.getExamples());
+                }
+                child.setBranch(value);
+                children.add(child);
+            }
+            Node n = new Node(children, bestAttribute.getLabel());
+            n.setExamples(examples);
+            return n;
+        }
+    }
+    
+
+    public boolean containsNumericalValues(Map<String, Map<String, String>> examples, String attribute) {
+        for (Map<String, String> example : examples.values()) {
+            String value = example.get(attribute);
+            if (isNumeric(value)) {
+                return true;
             }
         }
+        return false;
     }
-        return root;
-    }
+    
+    
+   
 
-    private boolean isPositive(Map<String, Map<String, String>> subset, String target) {
+    public boolean isNumeric(String str) {
+        if (str == null || str.isEmpty()) {
+            return false;
+        }
+        //System.out.println(str);
+        for (char c : str.toCharArray()) {
+            if (!Character.isDigit(c) && c != '.' && c != '-') {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    
+    
+   
+    
+   
+    
+
+    
+    
+   
+   /*  private Node ID3(Map<String, Map<String, String>> examples, Queue<String> attributes, String targetAttribute, Map<String, String> parentExample, String parentAttribute, String parentAttributeValue) {
+        // check if all examples have the same classification
+        if (isSame(examples, targetAttribute)) {
+            return new Node(new ArrayList<>(), getMostCommonValue(examples, targetAttribute));
+        }
+        // check if the list of attributes is empty
+        else if (attributes.isEmpty() || attributes.contains(null)) {
+            return new Node(new ArrayList<>(), getMostCommonValue(examples, targetAttribute));
+        }
+        // else split by best attribute and handle subsets (including empty)
+        else {
+            String bestAttribute = findBestAttribute(examples, attributes, targetAttribute).getLabel();
+            attributes = new HashSet<>(attributes);
+            attributes.remove(bestAttribute);
+            
+            List<String> attributeValues = getAttributeValues(examples, bestAttribute);
+            List<Node> children = new ArrayList<>();
+    
+            for (int i = 0; i < attributeValues.size(); i++) {
+                String value = attributeValues.get(i);
+                Node child = new Node();
+                Map<String, Map<String, String>> subset = getSubset(examples, bestAttribute, value);
+                if (subset.isEmpty()) {
+                    child = new Node(new ArrayList<>(), getMostCommonValue(examples, targetAttribute));
+                } else {
+                    child = ID3(subset, attributes, targetAttribute, examples.get(value), bestAttribute, value);
+                }
+                child.setBranch(value);
+                children.add(child);
+            }
+    
+            // create root node
+            Node root = new Node(children, bestAttribute);
+    
+            // handle inductive bias
+            if(parentAttribute != null){
+            if (exampleSatisfiesParent(parentExample, parentAttribute, parentAttributeValue)) {
+                String parentValue = parentExample.get(parentAttribute);
+                for (Node child : root.getChildren()) {
+                    if (child.getBranch().equals(parentValue)) {
+                        return child;
+                    }
+                }
+            }
+        }
+    
+            return root;
+        }
+    }
+    */
+    
+
+    private boolean isSame(Map<String, Map<String, String>> subset, String target) {
         String c = "";
         for(String id: subset.keySet()){
          c = subset.get(id).get(target);
+         break;
         }
        
-          //System.out.println(c + "JJJJ");
+         
         for(String id: subset.keySet()){
-           
-        
                 if(!subset.get(id).get(target).equals(c)) return false;
-             
-            
           }
         return true;
     }
 
-    private boolean isSame(Map<String, Map<String, String>> subset, String attribute, String value,String target) {
-        String c = "";
-       
-        for(String id: subset.keySet()){
-            String temp  = subset.get(id).get(attribute);
-            if(temp.equals(value)) c = subset.get(id).get(target);
-         }
-          //System.out.println(c + "JJJJ");
-        for(String id: subset.keySet()){
-           
-             if(subset.get(id).get(attribute).equals(value)){
-                if(!subset.get(id).get(target).equals(c)) return false;
-             }
-            
-          }
-        return true;
-    }
-
-    private boolean onlyClass(Map<String, Map<String, String>> examples, String targetAttribute) {
-        for(String id: examples.keySet()){
-          for(String i : examples.get(id).keySet()){
-                 if(!i.equals("Class")) return false;
-          }
-        }
-        return true;
-    }
-
-    private String getMostCommonValue(Map<String, Map<String,String>> examples,String attribute, String value, String target) {
-        Map<String, Integer> valueCount = new HashMap<>();
-        for (String id: examples.keySet()) {
-            String targetValue =  examples.get(id).get(target);
-            if(examples.get(id).get(attribute).equals(value))valueCount.put(targetValue, valueCount.getOrDefault(targetValue, 0) + 1);
-        }
-        String mostCommonValue = "";
-        int maxCount = 0;
-        for (Map.Entry<String, Integer> entry : valueCount.entrySet()) {
-            if (entry.getValue() > maxCount) {
-                mostCommonValue = entry.getKey();
-                maxCount = entry.getValue();
+    public static String getMostCommonValue(Map<String, Map<String, String>> examples, String attribute) {
+        Map<String, Integer> valueCounts = new HashMap<>();
+        for (String key : examples.keySet()) {
+            Map<String, String> example = examples.get(key);
+            if (example.containsKey(attribute)) {
+                String value = example.get(attribute);
+                int count = valueCounts.containsKey(value) ? valueCounts.get(value) : 0;
+                valueCounts.put(value, count + 1);
             }
         }
-        //System.out.println(mostCommonValue + " MOST");
+        String mostCommonValue = null;
+        int maxCount = 0;
+        for (String key : valueCounts.keySet()) {
+            int count = valueCounts.get(key);
+            if (count > maxCount) {
+                maxCount = count;
+                mostCommonValue = key;
+            }
+        }
         return mostCommonValue;
     }
 
     
 
-    public Node findBestAttribute(Map<String, Map<String,String>> examples, Set<String> attributes, String target) {
-        double minEntropy = Double.POSITIVE_INFINITY;
-        Node bestAttribute = new Node();
-    
+    private Node findBestAttribute(Map<String, Map<String, String>> examples, Queue<String> attributes, String target) {
+        double maxGain = Double.NEGATIVE_INFINITY;
+        Node attributeWithMaxGain = new Node();
+        
+        double targetEntropy = calculateEntropy(examples, target);
         for (String attribute : attributes) {
             double attributeEntropy = calculateEntropy(examples, attribute, target);
-            if (attributeEntropy < minEntropy) {
-                minEntropy = attributeEntropy;
-                bestAttribute.setLabel(attribute);
+            double gain = targetEntropy - attributeEntropy;
+        
+            if (gain > maxGain) {
+                maxGain = gain;
+                attributeWithMaxGain.setLabel(attribute);
             }
-            else if(attributeEntropy == minEntropy){
-                if(getAttributeValues(examples, attribute).size() < getAttributeValues(examples, bestAttribute.label).size()) 
-                           bestAttribute.setLabel(attribute);           
+            else if(gain == maxGain){
+                if(getAttributeValues(examples, attribute).size() < getAttributeValues(examples, attributeWithMaxGain.label).size()) 
+                           attributeWithMaxGain.setLabel(attribute);  
             }
         }
-    
-        return bestAttribute;
-    }
-    
-    private double calculateEntropy(Map<String, Map<String, String>> examples, String attribute, String target) {
-        int totalCount = examples.keySet().size();
-        Map<String, Integer> attributeValueCounts = new HashMap<>();
-        Map<String, Map<String, Integer>> attributeTargetCounts = new HashMap<>();
         
+       
+        return attributeWithMaxGain;
+    }
+
+    
+    public static double calculateEntropy(Map<String, Map<String, String>> examples, String attribute, String target) {
+        double totalEntropy = 0.0;
+        Map<String, Integer> attributeValueCounts = new HashMap<>();
+        Map<String, Map<String, Integer>> attributeValueTargetCounts = new HashMap<>();
+    
+        // Count the frequency of each attribute value and each target value for each attribute value
         for (String id : examples.keySet()) {
-            String attributeValue = examples.get(id).get(attribute);
-            String targetValue = examples.get(id).get(target);
-            
+            Map<String, String> example = examples.get(id);
+            String attributeValue = example.get(attribute);
+            String targetValue = example.get(target);
+    
             if (!attributeValueCounts.containsKey(attributeValue)) {
                 attributeValueCounts.put(attributeValue, 0);
-                attributeTargetCounts.put(attributeValue, new HashMap<>());
+                attributeValueTargetCounts.put(attributeValue, new HashMap<>());
             }
             attributeValueCounts.put(attributeValue, attributeValueCounts.get(attributeValue) + 1);
-            
-            Map<String, Integer> targetValueCounts = attributeTargetCounts.get(attributeValue);
+    
+            Map<String, Integer> targetValueCounts = attributeValueTargetCounts.get(attributeValue);
             if (!targetValueCounts.containsKey(targetValue)) {
                 targetValueCounts.put(targetValue, 0);
             }
             targetValueCounts.put(targetValue, targetValueCounts.get(targetValue) + 1);
         }
-        
-        double entropy = 0.0;
+    
+        // Calculate the entropy of each attribute value and add it to the total entropy
         for (String attributeValue : attributeValueCounts.keySet()) {
-            double attributeValueProbability = (double) attributeValueCounts.get(attributeValue) / totalCount;
-            double targetValueProbability = 0.0;
-            
-            Map<String, Integer> targetValueCounts = attributeTargetCounts.get(attributeValue);
-            for (String targetValue : targetValueCounts.keySet()) {
-                double targetValueFraction = (double) targetValueCounts.get(targetValue) / attributeValueCounts.get(attributeValue);
-                if (targetValueFraction != 0) {
-                    targetValueProbability -= targetValueFraction * Math.log(targetValueFraction) / Math.log(2);
+            int attributeValueCount = attributeValueCounts.get(attributeValue);
+            double attributeValueProbability = (double) attributeValueCount / examples.size();
+            double attributeValueEntropy = calculateAttributeValueEntropy(examples, attribute, attributeValue, target);
+            totalEntropy += attributeValueProbability * attributeValueEntropy;
+        }
+         
+        return totalEntropy;
+    }
+
+    public static double calculateAttributeValueEntropy(Map<String, Map<String, String>> examples, String attribute, String attributeValue, String target) {
+        int totalCount = 0;
+        Map<String, Integer> targetValueCounts = new HashMap<>();
+        Map<String, Double> targetValueProbabilities = new HashMap<>();
+    
+        for (String id : examples.keySet()) {
+            Map<String, String> example = examples.get(id);
+            String exampleAttributeValue = example.get(attribute);
+            String exampleTargetValue = example.get(target);
+    
+            if (exampleAttributeValue != null && exampleAttributeValue.equals(attributeValue)) {
+                totalCount++;
+    
+                if (targetValueCounts.containsKey(exampleTargetValue)) {
+                    targetValueCounts.put(exampleTargetValue, targetValueCounts.get(exampleTargetValue) + 1);
+                } else {
+                    targetValueCounts.put(exampleTargetValue, 1);
                 }
             }
-            
-            entropy += attributeValueProbability * targetValueProbability;
+        }
+    
+        if (totalCount == 0) {
+            return 0.0;
+        }
+    
+        double entropy = 0.0;
+        //if(attribute.equals("temp")) System.out.println(targetValueCounts + "EFH");
+        for (String targetValue : targetValueCounts.keySet()) {
+            int targetValueCount = targetValueCounts.get(targetValue);
+            double targetValueProbability = (double) targetValueCount / totalCount;
+            targetValueProbabilities.put(targetValue, targetValueProbability);
+            entropy -= targetValueProbability * Math.log(targetValueProbability) / Math.log(2);
         }
         
         return entropy;
     }
+    
+    
     
 
-    private double calculateEntropy1(Map<String, Map<String, String>> examples, String attribute) {
-        double p = 0, n = 0;
-        double upYes = 0, upNo = 0, down = 0, newDown = 0;
-        List<String> s = getAttributeValues(examples, attribute);
-        double entropy = 0.0;
-        for (String x : s) {
-            upYes = 0; upNo = 0; down = 0; newDown = 0;
+    public static double calculateEntropy(Map<String, Map<String, String>> examples, String targetAttribute) {
+        int totalExamples = examples.size();
+        Map<String, Integer> targetCounts = new HashMap<>();
     
-            for (String id : examples.keySet()) {
-                if (examples.get(id).containsKey(attribute)) {
-                    if (examples.get(id).get(attribute).equals(x)) {
-                        if (examples.get(id).get("Class").equals("Yes")) upYes++;
-                        else upNo++;
-                        down++;
-                    }
-                }
+        // Count the frequency of each target value
+        for (Map<String, String> example : examples.values()) {
+            String targetValue = example.get(targetAttribute);
+            if (!targetCounts.containsKey(targetValue)) {
+                targetCounts.put(targetValue, 0);
             }
-            if(down == 0) continue;
-            //System.out.println(down + " Down " + upNo + " UpNO " + upYes );
-            p = upYes / down;
-            n = upNo / down;
-            if (p != 0 && n != 0) {
-                
-                double temp = -p * Math.log(p) / Math.log(2) - n * Math.log(n) / Math.log(2);
-                newDown = examples.keySet().size();
-                entropy += (down / newDown) * temp;
-                //System.out.println(entropy);
-            }
+            targetCounts.put(targetValue, targetCounts.get(targetValue) + 1);
         }
-        
+    
+        double entropy = 0.0;
+        for (int count : targetCounts.values()) {
+            double probability = (double) count / totalExamples;
+            entropy -= probability * Math.log(probability) / Math.log(2);
+        }
+    
         return entropy;
     }
+    
+    
+    
+    
+    
     
     
     private static List<String> getAttributeValues(Map<String, Map<String,String>> examples, String attribute) {
@@ -244,21 +340,15 @@ public class Tree {
         for (Map.Entry<String,Map<String,String>> entry : examples.entrySet()){
             aux.put(entry.getKey(), new HashMap<String,String>(entry.getValue()));
         }
-        HashSet<String> h = new HashSet<>();
-        //System.out.println(examples + " AA " + value);
+       
         for (String id : examples.keySet()) {
-          // System.out.println(examples + " WALLA " );
-            //System.out.println(examples);
-            
-            //System.out.println(attribute + "HHHH");
+          
             
             if(examples.get(id).get(attribute).equals(value)){ 
                 Map<String,String> temp = aux.get(id);
                 subset.put(id, temp);
             
-            //subset.get(id).put(value, examples.get(id).get("Class"));
             
-            //System.out.println(subset);
             subset.get(id).remove(attribute);
         }
         
@@ -267,5 +357,28 @@ public class Tree {
         //if(attribute.equals("Pat")) System.out.println(subset);
         return subset;
     }
+
+    private String getMajorityClassification(Map<String, Map<String, String>> examples, String targetAttribute) {
+        Map<String, Integer> targetValueCounts = new HashMap<>();
+        for (String id : examples.keySet()) {
+            Map<String, String> example = examples.get(id);
+            String targetValue = example.get(targetAttribute);
+            if (!targetValueCounts.containsKey(targetValue)) {
+                targetValueCounts.put(targetValue, 0);
+            }
+            targetValueCounts.put(targetValue, targetValueCounts.get(targetValue) + 1);
+        }
+        int maxCount = -1;
+        String majorityClassification = null;
+        for (String targetValue : targetValueCounts.keySet()) {
+            int count = targetValueCounts.get(targetValue);
+            if (count > maxCount) {
+                maxCount = count;
+                majorityClassification = targetValue;
+            }
+        }
+        return majorityClassification;
+    }
+    
 
 }
