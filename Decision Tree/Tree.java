@@ -27,8 +27,6 @@ public class Tree {
         return root;
     }
 
-  
-
     
     private Node ID3(Map<String, Map<String, String>> examples, Queue<String> attributes, String targetAttribute) {
         // check if all examples have the same classification
@@ -37,12 +35,12 @@ public class Tree {
         }
         // check if the list of attributes is empty
         else if (attributes.isEmpty()) {
-            return new Node(new ArrayList<>(), getMajorityClassification(examples, targetAttribute));
+            return new Node(new ArrayList<>(), getMostCommonValue(examples, targetAttribute));
         }
         // else split by best attribute and handle subsets (including empty)
         else {
             Node bestAttribute = findBestAttribute(examples, attributes, targetAttribute);
-            List<String> attributeValues = getAttributeValues(examples, bestAttribute.getLabel());
+            List<String> attributeValues = getAttributeValues(data, bestAttribute.getLabel());
             List<Node> children = new ArrayList<>();
            
            
@@ -57,7 +55,7 @@ public class Tree {
                     child.setExamples(subset);
                     
                     child = ID3(subset, remainingAttributes, targetAttribute);
-                    System.out.println(child.getExamples());
+                  
                 }
                 child.setBranch(value);
                 children.add(child);
@@ -66,6 +64,30 @@ public class Tree {
             n.setExamples(examples);
             return n;
         }
+    }
+
+    public String findAnswer(Map<String, String> example){
+        if(root == null) return null;
+        Node node = root;
+       
+        while(!node.getChildren().isEmpty()){
+            for(Node x: node.getChildren()){
+               
+                if(example.get(node.getLabel()).equals(x.getBranch())){
+                    node = x;
+                    break;
+                }
+            }
+        }
+        return node.getLabel();
+    }
+
+    public boolean testTree(Map<String, Map<String,String>> examples){
+        for(String x: examples.keySet()){
+            Map<String,String> m = examples.get(x);
+         if(!m.get(target).equals(findAnswer(m))) return false;
+        }
+        return true;
     }
     
 
@@ -94,68 +116,6 @@ public class Tree {
         }
         return true;
     }
-    
-    
-    
-   
-    
-   
-    
-
-    
-    
-   
-   /*  private Node ID3(Map<String, Map<String, String>> examples, Queue<String> attributes, String targetAttribute, Map<String, String> parentExample, String parentAttribute, String parentAttributeValue) {
-        // check if all examples have the same classification
-        if (isSame(examples, targetAttribute)) {
-            return new Node(new ArrayList<>(), getMostCommonValue(examples, targetAttribute));
-        }
-        // check if the list of attributes is empty
-        else if (attributes.isEmpty() || attributes.contains(null)) {
-            return new Node(new ArrayList<>(), getMostCommonValue(examples, targetAttribute));
-        }
-        // else split by best attribute and handle subsets (including empty)
-        else {
-            String bestAttribute = findBestAttribute(examples, attributes, targetAttribute).getLabel();
-            attributes = new HashSet<>(attributes);
-            attributes.remove(bestAttribute);
-            
-            List<String> attributeValues = getAttributeValues(examples, bestAttribute);
-            List<Node> children = new ArrayList<>();
-    
-            for (int i = 0; i < attributeValues.size(); i++) {
-                String value = attributeValues.get(i);
-                Node child = new Node();
-                Map<String, Map<String, String>> subset = getSubset(examples, bestAttribute, value);
-                if (subset.isEmpty()) {
-                    child = new Node(new ArrayList<>(), getMostCommonValue(examples, targetAttribute));
-                } else {
-                    child = ID3(subset, attributes, targetAttribute, examples.get(value), bestAttribute, value);
-                }
-                child.setBranch(value);
-                children.add(child);
-            }
-    
-            // create root node
-            Node root = new Node(children, bestAttribute);
-    
-            // handle inductive bias
-            if(parentAttribute != null){
-            if (exampleSatisfiesParent(parentExample, parentAttribute, parentAttributeValue)) {
-                String parentValue = parentExample.get(parentAttribute);
-                for (Node child : root.getChildren()) {
-                    if (child.getBranch().equals(parentValue)) {
-                        return child;
-                    }
-                }
-            }
-        }
-    
-            return root;
-        }
-    }
-    */
-    
 
     private boolean isSame(Map<String, Map<String, String>> subset, String target) {
         String c = "";
@@ -293,6 +253,9 @@ public class Tree {
     
     
     
+    
+    
+    
 
     public static double calculateEntropy(Map<String, Map<String, String>> examples, String targetAttribute) {
         int totalExamples = examples.size();
@@ -358,27 +321,8 @@ public class Tree {
         return subset;
     }
 
-    private String getMajorityClassification(Map<String, Map<String, String>> examples, String targetAttribute) {
-        Map<String, Integer> targetValueCounts = new HashMap<>();
-        for (String id : examples.keySet()) {
-            Map<String, String> example = examples.get(id);
-            String targetValue = example.get(targetAttribute);
-            if (!targetValueCounts.containsKey(targetValue)) {
-                targetValueCounts.put(targetValue, 0);
-            }
-            targetValueCounts.put(targetValue, targetValueCounts.get(targetValue) + 1);
-        }
-        int maxCount = -1;
-        String majorityClassification = null;
-        for (String targetValue : targetValueCounts.keySet()) {
-            int count = targetValueCounts.get(targetValue);
-            if (count > maxCount) {
-                maxCount = count;
-                majorityClassification = targetValue;
-            }
-        }
-        return majorityClassification;
-    }
+   
+  
     
 
 }
