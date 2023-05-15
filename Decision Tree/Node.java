@@ -75,5 +75,27 @@ public class Node {
         parent = p;
     }
 
+    private static List<String> getAttributeValues(Map<String, Map<String,String>> examples, String attribute) {
+        List<String> values = new ArrayList<>();
+
+        for ( String id : examples.keySet()) {
+            String value = examples.get(id).get(attribute);
+            if (!values.contains(value)) {
+                values.add(value);
+            }
+        }
+        return values;
+    }
+
+    public int countAttributeValues(Map<String, Map<String,String>> examples, String attribute, String value) {
+        int counter = 0;
+       
+        for ( String id : examples.keySet()) {
+            String v = examples.get(id).get(attribute);
+            if(v.equals(value)) counter++;  
+        }
+        return counter;
+    }
+
     
 }
