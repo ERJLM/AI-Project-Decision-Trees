@@ -13,7 +13,7 @@ public class DTMain {
         for (Node child : node.getChildren()){
             System.out.print(indent + "    " + child.getBranch() + ": ");
             if (child.getChildren().isEmpty()) {
-                System.out.println(child.getLabel() + " (" + (node.getExamples().keySet().size()) + ")");
+                System.out.println(child.getLabel() + " (" + (node.countAttributeValues(node.getExamples(), node.getLabel(), child.getBranch())) + ")");
             } else {
                 System.out.println();
                 printTree(child, indent + "    ");
@@ -84,9 +84,9 @@ public class DTMain {
         //System.out.println(attributes);
         
         Tree t = new Tree(m, targetAttribute, attributes);
-       Node n = t.getRoot();
-        printTree(n, "");
-       
-        //System.out.println(m);
+        Node root = t.getRoot();
+        printTree(root, "");
+        //System.out.println("What is the answer for this example?");
+        //System.out.println(t.findAnswer(m.get("X3")));
     }
 }
