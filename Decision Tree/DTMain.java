@@ -3,6 +3,25 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 public class DTMain {
+
+  
+    
+
+    public static void printTree(Node node, String indent) {
+        System.out.println(indent + "<" + node.getLabel() + ">");
+                
+        for (Node child : node.getChildren()){
+            System.out.print(indent + "    " + child.getBranch() + ": ");
+            if (child.getChildren().isEmpty()) {
+                System.out.println(child.getLabel() + " (" + (node.getExamples().keySet().size()) + ")");
+            } else {
+                System.out.println();
+                printTree(child, indent + "    ");
+            }
+        }
+    }
+    
+    
     public static void main(String[] args) throws FileNotFoundException {
           System.out.println("Enter the path for the dataset: ");
           Scanner scan = new Scanner(System.in);
@@ -23,12 +42,12 @@ public class DTMain {
         String[] headers = null;
         while (sc.hasNext()) {
             if (headers == null) {
-                headers = sc.nextLine().split(",");
+                headers = sc.nextLine().split("[\\s,]+");
                 //System.out.println(headers);
                 continue;
             }
              
-            String[] values = sc.nextLine().split(",");
+            String[] values = sc.nextLine().split("[\\s,]+");
             String id = values[0];
             Map<String, String> rowData = new LinkedHashMap<>();
             for (int i = 1; i < headers.length; i++) {
@@ -41,14 +60,14 @@ public class DTMain {
         scan.close();
         // Print the map m for verification
         for (Map.Entry<String, Map<String, String>> entry : m.entrySet()) {
-            System.out.println("ID: " + entry.getKey());
+            //System.out.println("ID: " + entry.getKey());
             Map<String, String> rowData = entry.getValue();
             for (Map.Entry<String, String> rowEntry : rowData.entrySet()) {
-                System.out.println(rowEntry.getKey() + ": " + rowEntry.getValue());
+                //System.out.println(rowEntry.getKey() + ": " + rowEntry.getValue());
             }
-            System.out.println("------------------------");
+           // System.out.println("------------------------");
         }
-        Set<String> attributes = new HashSet<>();
+        Queue<String> attributes = new ArrayDeque<>();
        
         LinkedList<String> list = new LinkedList<>();
        // System.out.println(queue);
@@ -62,21 +81,12 @@ public class DTMain {
     }
         String targetAttribute = list.peekLast();
         //System.out.println(m);
-       // System.out.println(attributes);
+        //System.out.println(attributes);
         
         Tree t = new Tree(m, targetAttribute, attributes);
-        Node n = t.getRoot();
-        System.out.println(n.getLabel() + " ROOT ");
-        for(Node x: n.children){
-            System.out.println(x.getLabel());
-            for(Node y: x.children){
-                System.out.println(x.getLabel() + " Child " + y.getLabel());
-                for(Node z: y.children){
-                    System.out.println(y.getLabel() + " Child " + z.getLabel());
-                   
-                }
-            }
-        } 
+       Node n = t.getRoot();
+        printTree(n, "");
+       
         //System.out.println(m);
     }
 }
