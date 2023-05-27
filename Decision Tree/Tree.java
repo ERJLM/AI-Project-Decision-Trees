@@ -1,3 +1,4 @@
+import java.text.DecimalFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,10 +15,13 @@ public class Tree {
     Queue<String> attrib;
     String target;
     Tree(Map<String, Map<String,String>> examples, String targetAttribute, Queue<String> attributes){
+        //We have chosen 4 because it has a pretty good balance between percentage of sucess and size of the tree.
+        examples = discretize(examples, attributes, 4);
+        //System.out.println(examples);
         data = examples;
         attrib = attributes;
         target = targetAttribute;
-     
+       
         root = ID3(examples, attributes, targetAttribute);
         root.setExamples(examples);
     }
@@ -25,6 +29,10 @@ public class Tree {
 
     Node getRoot(){
         return root;
+    }
+
+    Map<String, Map<String,String>> getData(){
+        return data;
     }
 
     
@@ -66,6 +74,51 @@ public class Tree {
         }
     }
 
+    public Map<String, Map<String, String>> discretize(Map<String, Map<String, String>> examples, Queue<String> attributess, int bins) {
+        Map<String, Map<String, String>> discretizedData = new HashMap<>();
+
+        // Iterate over each record in the dataset
+        for (Map.Entry<String, Map<String, String>> recordEntry : examples.entrySet()) {
+            String recordId = recordEntry.getKey();
+            Map<String, String> attributes = recordEntry.getValue();
+
+            Map<String, String> discretizedAttributes = new HashMap<>();
+
+            // Iterate over each attribute in the record
+            for (Map.Entry<String, String> attributeEntry : attributes.entrySet()) {
+                String attributeName = attributeEntry.getKey();
+                String attributeValue = attributeEntry.getValue();
+                String discretizedValue;
+                // Discretize the attribute value
+               if(isNumeric(attributeValue)){ discretizedValue = discretizeValue(attributeValue, bins);}
+               else discretizedValue = attributeValue;
+                // Store the discretized value in the map
+                discretizedAttributes.put(attributeName, discretizedValue);
+            }
+
+            // Store the discretized attributes for the record
+            discretizedData.put(recordId, discretizedAttributes);
+            
+        }
+        //System.out.println(discretizedData);
+        return discretizedData;
+    }
+
+    private static String discretizeValue(String value, int numBins) {
+        double numericValue = Double.parseDouble(value);
+        double binWidth = 10.0 / numBins;
+        DecimalFormat decimalFormat = new DecimalFormat("#.##");
+        double roundedBinWidth = Double.parseDouble(decimalFormat.format(binWidth));
+        int binIndex = (int) Math.floor(numericValue / binWidth);
+
+        // Calculate the interval for the discretized value
+        double lowerBound = binIndex * roundedBinWidth;
+        double upperBound = (binIndex + 1) * roundedBinWidth;
+        String interval = "[" + lowerBound + ", " + upperBound + ")";
+       // System.out.println(interval);
+        return interval;
+    }
+
     public String findAnswer(Map<String, String> example){
         if(root == null) return null;
         Node node = root;
@@ -82,12 +135,27 @@ public class Tree {
         return node.getLabel();
     }
 
-    public boolean testTree(Map<String, Map<String,String>> examples){
+    public String testTree(Map<String, Map<String,String>> examples){
+        String result = "0%";
+        int counter = 0, total = 0;
+        double r = 0;
         for(String x: examples.keySet()){
             Map<String,String> m = examples.get(x);
-         if(!m.get(target).equals(findAnswer(m))) return false;
+         if(!m.get(target).equals(findAnswer(m))){
+
+         }
+         else{
+            counter++;
+         }
+         total++;
         }
-        return true;
+        r = (double) counter/total;
+        r *= 100;
+        DecimalFormat decimalFormat = new DecimalFormat("#.##");
+        r = Double.parseDouble(decimalFormat.format(r));
+        result = Double.toString(r);
+        result += "%";
+        return result;
     }
     
 
@@ -103,7 +171,6 @@ public class Tree {
     
     
    
-
     public boolean isNumeric(String str) {
         if (str == null || str.isEmpty()) {
             return false;
@@ -240,7 +307,7 @@ public class Tree {
         }
     
         double entropy = 0.0;
-        //if(attribute.equals("temp")) System.out.println(targetValueCounts + "EFH");
+       
         for (String targetValue : targetValueCounts.keySet()) {
             int targetValueCount = targetValueCounts.get(targetValue);
             double targetValueProbability = (double) targetValueCount / totalCount;
@@ -317,7 +384,7 @@ public class Tree {
         
              
         }
-        //if(attribute.equals("Pat")) System.out.println(subset);
+      
         return subset;
     }
 
