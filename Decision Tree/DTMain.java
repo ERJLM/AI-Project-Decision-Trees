@@ -26,7 +26,7 @@ public class DTMain {
           System.out.println("Enter the path for the dataset: ");
           Scanner scan = new Scanner(System.in);
           String f = scan.nextLine();
-      
+       // String filePath = args[0];
         File file = new File(f);
 
         if (!file.exists()) {
@@ -80,11 +80,15 @@ public class DTMain {
         break;
     }
         String targetAttribute = list.peekLast();
-      
+
+        //System.out.println(attributes);
         
         Tree t = new Tree(m, targetAttribute, attributes);
+        m = t.getData();
         Node root = t.getRoot();
         printTree(root, "");
-       
+        System.out.println();
+        System.out.println("Percentage of success: ");
+        System.out.println(t.testTree(m));
     }
 }
