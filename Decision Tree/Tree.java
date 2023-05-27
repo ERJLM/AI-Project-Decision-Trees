@@ -15,9 +15,14 @@ public class Tree {
     Queue<String> attrib;
     String target;
     Tree(Map<String, Map<String,String>> examples, String targetAttribute, Queue<String> attributes){
+        String id = "";
+        //This loop gets the first id of the examples map
+        for(String x : examples.keySet()){
+            id = x;
+            break;
+        }
         //We have chosen 4 because it has a pretty good balance between percentage of sucess and size of the tree.
-        examples = discretize(examples, attributes, 4);
-        //System.out.println(examples);
+      if(examples.size() >= 100 || examples.get(id).size() >= 100)  examples = discretize(examples, attributes, 4);
         data = examples;
         attrib = attributes;
         target = targetAttribute;
@@ -74,35 +79,50 @@ public class Tree {
         }
     }
 
-    public Map<String, Map<String, String>> discretize(Map<String, Map<String, String>> examples, Queue<String> attributess, int bins) {
+    public Map<String, Map<String, String>> discretize(Map<String, Map<String, String>> examples, Queue<String> attributes, int bins) {
         Map<String, Map<String, String>> discretizedData = new HashMap<>();
-
+    
         // Iterate over each record in the dataset
         for (Map.Entry<String, Map<String, String>> recordEntry : examples.entrySet()) {
             String recordId = recordEntry.getKey();
-            Map<String, String> attributes = recordEntry.getValue();
-
+            Map<String, String> originalAttributes = recordEntry.getValue();
             Map<String, String> discretizedAttributes = new HashMap<>();
-
+    
             // Iterate over each attribute in the record
-            for (Map.Entry<String, String> attributeEntry : attributes.entrySet()) {
+            for (Map.Entry<String, String> attributeEntry : originalAttributes.entrySet()) {
                 String attributeName = attributeEntry.getKey();
                 String attributeValue = attributeEntry.getValue();
                 String discretizedValue;
-                // Discretize the attribute value
-               if(isNumeric(attributeValue)){ discretizedValue = discretizeValue(attributeValue, bins);}
-               else discretizedValue = attributeValue;
+    
+                if (isNumeric(attributeValue) && allValuesNumeric(examples, attributeName)) {
+                    // Discretize the attribute value
+                    discretizedValue = discretizeValue(attributeValue, bins);
+                } else {
+                    discretizedValue = attributeValue;
+                }
+    
                 // Store the discretized value in the map
                 discretizedAttributes.put(attributeName, discretizedValue);
             }
-
+    
             // Store the discretized attributes for the record
             discretizedData.put(recordId, discretizedAttributes);
-            
         }
         //System.out.println(discretizedData);
         return discretizedData;
     }
+    
+    // Helper method to check if all values of an attribute are numeric
+    private boolean allValuesNumeric(Map<String, Map<String, String>> examples, String attributeName) {
+        for (String id : examples.keySet()) {
+         String value = examples.get(id).get(attributeName);
+            if (!isNumeric(value)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
 
     private static String discretizeValue(String value, int numBins) {
         double numericValue = Double.parseDouble(value);
@@ -384,7 +404,7 @@ public class Tree {
         
              
         }
-        
+        //if(attribute.equals("Pat")) System.out.println(subset);
         return subset;
     }
 
