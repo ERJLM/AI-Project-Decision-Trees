@@ -15,14 +15,9 @@ public class Tree {
     Queue<String> attrib;
     String target;
     Tree(Map<String, Map<String,String>> examples, String targetAttribute, Queue<String> attributes){
-        String id = "";
-        //This loop gets the first id of the examples map
-        for(String x : examples.keySet()){
-            id = x;
-            break;
-        }
+
         //We have chosen 4 because it has a pretty good balance between percentage of sucess and size of the tree.
-      if(examples.size() >= 100 || examples.get(id).size() >= 100)  examples = discretize(examples, attributes, 4);
+      if(examples.size() >= 100)  examples = discretize(examples, attributes, 4);
         data = examples;
         attrib = attributes;
         target = targetAttribute;
