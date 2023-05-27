@@ -107,13 +107,13 @@ public class Tree {
     private static String discretizeValue(String value, int numBins) {
         double numericValue = Double.parseDouble(value);
         double binWidth = 10.0 / numBins;
-        DecimalFormat decimalFormat = new DecimalFormat("#.##");
+        DecimalFormat decimalFormat = new DecimalFormat("#.#");
         double roundedBinWidth = Double.parseDouble(decimalFormat.format(binWidth));
         int binIndex = (int) Math.floor(numericValue / binWidth);
 
         // Calculate the interval for the discretized value
-        double lowerBound = binIndex * roundedBinWidth;
-        double upperBound = (binIndex + 1) * roundedBinWidth;
+        float lowerBound = (float) (binIndex * roundedBinWidth);
+        float upperBound = (float) ((binIndex + 1) * roundedBinWidth);
         String interval = "[" + lowerBound + ", " + upperBound + ")";
        // System.out.println(interval);
         return interval;
@@ -307,7 +307,7 @@ public class Tree {
         }
     
         double entropy = 0.0;
-       
+        //if(attribute.equals("temp")) System.out.println(targetValueCounts + "EFH");
         for (String targetValue : targetValueCounts.keySet()) {
             int targetValueCount = targetValueCounts.get(targetValue);
             double targetValueProbability = (double) targetValueCount / totalCount;
@@ -384,7 +384,7 @@ public class Tree {
         
              
         }
-      
+        
         return subset;
     }
 
