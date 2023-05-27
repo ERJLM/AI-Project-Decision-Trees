@@ -88,6 +88,7 @@ public class DTMain {
         Node root = t.getRoot();
         printTree(root, "");
         System.out.println();
+        //The testTree method returns the percentage of sucess of the tree
         System.out.println("Percentage of success: ");
         System.out.println(t.testTree(m));
     }
