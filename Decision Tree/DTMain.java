@@ -17,10 +17,10 @@ public class DTMain {
         }
     }
     
-    public static Map<String, Map<String, String>> fileToMap(File file) throws FileNotFoundException{
+    public static Map<String, Map<String, String>> fileToMap(String f) throws FileNotFoundException{
         Map<String, Map<String, String>> m = new HashMap<String, Map<String, String>>();
+        File file = new File(f);
         Scanner sc = new Scanner(file);
-       
         sc.useDelimiter(",|\r\n");
  
         String[] headers = null;
@@ -50,17 +50,10 @@ public class DTMain {
           System.out.println("Enter the path for the dataset: ");
           Scanner scan = new Scanner(System.in);
           String f = scan.nextLine();
-       // String filePath = args[0];
-        File file = new File(f);
-
-        if (!file.exists()) {
-            System.out.println("The specified file does not exist.");
-            scan.close();
-            return;
-        }
+    
         long startTime = System.currentTimeMillis();
         Map<String, Map<String, String>> m = new LinkedHashMap<>();
-        m = fileToMap(file);
+        m = fileToMap(f);
         scan.close();
        
         Queue<String> attributes = new ArrayDeque<>();
@@ -87,7 +80,7 @@ public class DTMain {
         System.out.println(t.testTree(m));
         /*
         If you want to test the success rate of the tree with another examples 
-        call the method "t.testTree(fileToMap(file))" where file is a csv file with the examples.
+        call the method "t.testTree(fileToMap(f))" where f is a the path of a csv file with the examples.
         */
         long endTime = System.currentTimeMillis();
         long elapsedTime = endTime - startTime;
