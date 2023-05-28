@@ -3,10 +3,6 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 public class DTMain {
-
-  
-    
-
     public static void printTree(Node node, String indent) {
         System.out.println(indent + "<" + node.getLabel() + ">");
                 
@@ -34,7 +30,7 @@ public class DTMain {
             scan.close();
             return;
         }
-
+        long startTime = System.currentTimeMillis();
         Map<String, Map<String, String>> m = new LinkedHashMap<>();
         Scanner sc = new Scanner(file);
         sc.useDelimiter(",|\r\n");
@@ -91,5 +87,8 @@ public class DTMain {
         //The testTree method returns the percentage of sucess of the tree
         System.out.println("Percentage of success: ");
         System.out.println(t.testTree(m));
+        long endTime = System.currentTimeMillis();
+        long elapsedTime = endTime - startTime;
+        System.out.println("Elapsed time: \n" + elapsedTime + "ms");
     }
 }
