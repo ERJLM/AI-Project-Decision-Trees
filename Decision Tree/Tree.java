@@ -151,6 +151,7 @@ public class Tree {
     }
 
     public String testTree(Map<String, Map<String,String>> examples){
+        if(examples.size() >= 100)  examples = discretize(examples, attrib, 4);
         String result = "0%";
         int counter = 0, total = 0;
         double r = 0;
