@@ -2,7 +2,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-public class Main {
+public class DTMain {
     public static void printTree(Node node, String indent) {
         System.out.println(indent + "<" + node.getLabel() + ">");
                 
