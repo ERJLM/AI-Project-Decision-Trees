@@ -2,7 +2,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-public class DTMain {
+public class Main {
     public static void printTree(Node node, String indent) {
         System.out.println(indent + "<" + node.getLabel() + ">");
                 
@@ -17,24 +17,12 @@ public class DTMain {
         }
     }
     
-    
-    public static void main(String[] args) throws FileNotFoundException {
-          System.out.println("Enter the path for the dataset: ");
-          Scanner scan = new Scanner(System.in);
-          String f = scan.nextLine();
-       // String filePath = args[0];
-        File file = new File(f);
-
-        if (!file.exists()) {
-            System.out.println("The specified file does not exist.");
-            scan.close();
-            return;
-        }
-        long startTime = System.currentTimeMillis();
-        Map<String, Map<String, String>> m = new LinkedHashMap<>();
+    public static Map<String, Map<String, String>> fileToMap(File file) throws FileNotFoundException{
+        Map<String, Map<String, String>> m = new HashMap<String, Map<String, String>>();
         Scanner sc = new Scanner(file);
+       
         sc.useDelimiter(",|\r\n");
-
+ 
         String[] headers = null;
         while (sc.hasNext()) {
             if (headers == null) {
@@ -53,20 +41,32 @@ public class DTMain {
         }
 
         sc.close();
-        scan.close();
-        // Print the map m for verification
-        for (Map.Entry<String, Map<String, String>> entry : m.entrySet()) {
-            //System.out.println("ID: " + entry.getKey());
-            Map<String, String> rowData = entry.getValue();
-            for (Map.Entry<String, String> rowEntry : rowData.entrySet()) {
-                //System.out.println(rowEntry.getKey() + ": " + rowEntry.getValue());
-            }
-           // System.out.println("------------------------");
+       
+        
+      return m;
+    }
+    
+    public static void main(String[] args) throws FileNotFoundException {
+          System.out.println("Enter the path for the dataset: ");
+          Scanner scan = new Scanner(System.in);
+          String f = scan.nextLine();
+       // String filePath = args[0];
+        File file = new File(f);
+
+        if (!file.exists()) {
+            System.out.println("The specified file does not exist.");
+            scan.close();
+            return;
         }
+        long startTime = System.currentTimeMillis();
+        Map<String, Map<String, String>> m = new LinkedHashMap<>();
+        m = fileToMap(file);
+        scan.close();
+       
         Queue<String> attributes = new ArrayDeque<>();
        
         LinkedList<String> list = new LinkedList<>();
-       // System.out.println(queue);
+       
         for(String key: m.keySet()){
             list = new LinkedList<>(m.get(key).keySet());
         for(String x: m.get(key).keySet()){
@@ -76,19 +76,22 @@ public class DTMain {
         break;
     }
         String targetAttribute = list.peekLast();
-
-        //System.out.println(attributes);
         
         Tree t = new Tree(m, targetAttribute, attributes);
         m = t.getData();
         Node root = t.getRoot();
         printTree(root, "");
         System.out.println();
-        //The testTree method returns the percentage of sucess of the tree
+        //The testTree method returns the percentage of success of the tree based in the examples
         System.out.println("Percentage of success: ");
         System.out.println(t.testTree(m));
+        /*
+        If you want to test the success rate of the tree with another examples 
+        call the method "t.testTree(fileToMap(file))" where file is a csv file with the examples.
+        */
         long endTime = System.currentTimeMillis();
         long elapsedTime = endTime - startTime;
         System.out.println("Elapsed time: \n" + elapsedTime + "ms");
     }
 }
+
